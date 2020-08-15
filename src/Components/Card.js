@@ -2,7 +2,7 @@ import React from 'react';
 import { Text, TouchableOpacity, Image, View } from "react-native"
 import styles from '../styles/styles'
 
-const Card = ({title, thumb, tagline, onPress}) => {
+const Card = ({ title, thumb, tagline, onPress }) => {
 
     return (
         <TouchableOpacity style={styles.cardContainer} onPress={onPress}>

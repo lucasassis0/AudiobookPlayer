@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, View, Image, StyleSheet, Text, ScrollView } from "react-native"
-import { Ionicons } from '@expo/vector-icons'
+import { View, Image, Text, ScrollView } from "react-native"
 import { AntDesign } from '@expo/vector-icons';
-// import styles from '../styles/styles'
-import { TouchableOpacity, State } from 'react-native-gesture-handler';
+import styles from '../styles/styles'
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Audio } from 'expo-av'
 import { Entypo } from '@expo/vector-icons';
 
@@ -16,6 +15,8 @@ export default function Player({ route, navigation }) {
     const [playbackInstance, setPlaybackInstance] = useState(null)
     const [playerData, setPlayerData] = useState(data)
     const [index, setIndex] = useState(playerData.id)
+    const [duration, setDuration] = useState('')
+    const [current, setCurrent] = useState(0)
 
     const changeData = (id) => {
         dt.map(element => {
@@ -24,11 +25,6 @@ export default function Player({ route, navigation }) {
             }
         })
     }
-
-    // useEffect(() => {
-    //     changeData(index)
-    //     console.log('index: ', index);
-    // }, [index])
 
     async function audioFunc() {
         try {
@@ -44,7 +40,6 @@ export default function Player({ route, navigation }) {
         }
     }
 
-
     useEffect(() => {
         audioFunc()
     }, []);
@@ -53,7 +48,7 @@ export default function Player({ route, navigation }) {
         try {
             const playbackInstance = new Audio.Sound()
             const source = {
-                uri: playlist[index-1]
+                uri: playlist[index - 1]
             }
 
             const status = {
@@ -64,13 +59,30 @@ export default function Player({ route, navigation }) {
             playbackInstance.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate)
             await playbackInstance.loadAsync(source, status, false)
             setPlaybackInstance(playbackInstance)
+            setTimeout(async() => {
+                const status = await playbackInstance.getStatusAsync()
+                const trackDuration = time_convert(status.durationMillis/1000)
+                setDuration(trackDuration)
+            }, 300)
         } catch (err) {
             console.log('err: ', err);
         }
     }
-
+    
+    function time_convert(num) {
+        var minutes = Math.floor(num / 60);
+        var seconds = num % 60;
+        if (seconds<10) {
+            seconds = 0+`${seconds.toFixed(0)}`
+            return minutes + ":" + seconds;
+        }
+        return minutes + ":" + seconds.toFixed(0);
+    }
+    
     const onPlaybackStatusUpdate = status => {
         setIsBuffering(status.isBuffering)
+        const trackCurrentTime = time_convert(status.positionMillis/1000)
+        setCurrent(trackCurrentTime)
     }
 
     const handlePlayPause = async () => {
@@ -81,20 +93,26 @@ export default function Player({ route, navigation }) {
     const handlePreviousTrack = async () => {
         if (playbackInstance) {
             await playbackInstance.unloadAsync()
-            let i = index
-            if (index-1 === 0) {
-                i = playlist.length
-                setIndex(i)
-                console.log('index: ', index);
-                changeData(index)
-                loadAudio()
-            } else {
-                i--
-                setIndex(i)
-                console.log('index: ', index);
-                changeData(index)
-                loadAudio()
-            }
+                .then(res => {
+                    let i = index
+                    if (index - 1 === 0) {
+                        i = playlist.length
+                        setIndex(i)
+                        console.log('index: ', index);
+                        changeData(index)
+                        setCurrent(0)
+                        loadAudio()
+                    } else {
+                        i--
+                        setIndex(i)
+                        console.log('index: ', index);
+                        changeData(index)
+                        loadAudio()
+                    }
+                })
+                .catch(err => {
+                    console.log('err: ', err);
+                })
         }
     }
 
@@ -102,7 +120,7 @@ export default function Player({ route, navigation }) {
         if (playbackInstance) {
             await playbackInstance.unloadAsync()
             let i = index
-            if (index-1 === playlist.length - 1) {
+            if (index - 1 === playlist.length - 1) {
                 i = 1
                 setIndex(i)
                 console.log('index: ', index);
@@ -125,7 +143,9 @@ export default function Player({ route, navigation }) {
 
     const stopOption = async () => {
         await playbackInstance.stopAsync()
-        setIsPlaying(!isPlaying)
+        if(isPlaying){
+            setIsPlaying(!isPlaying)
+        }
     }
     const RenderFileInfoTitle = () => {
         return playbackInstance ? (
@@ -133,7 +153,7 @@ export default function Player({ route, navigation }) {
                 <Text style={[styles.trackInfoText, styles.largeText]}>
                     {playerData.title}
                 </Text>
-                <Text style={[styles.trackInfoText, styles.smallText]}>
+                <Text style={[styles.trackInfoText, styles.author]}>
                     {playerData.author}
                 </Text>
             </View>
@@ -143,7 +163,7 @@ export default function Player({ route, navigation }) {
     const RenderFileInfoDescription = () => {
         return playbackInstance ? (
             <ScrollView style={styles.containerDescription}>
-                <Text style={[styles.trackInfoText, styles.smallestText]}>
+                <Text style={[styles.trackInfoText, styles.smallText]}>
                     {playerData.description}
                 </Text>
             </ScrollView>
@@ -165,22 +185,27 @@ export default function Player({ route, navigation }) {
                     style={styles.trackImg}
                     source={{ uri: playerData.medium_image_url }}
                 />
+                <View>
+                    <Text style={styles.timeBar}>
+                        {`${current} - ${duration}`}
+                    </Text>
+                </View>
                 <View style={styles.controls}>
                     <TouchableOpacity style={styles.controll} onPress={() => handlePreviousTrack()}>
-                        <Ionicons name='ios-skip-backward' size={48} color='#444' />
+                        <Entypo name="controller-jump-to-start" size={30} color="#444" />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.controll} onPress={() => handlePlayPause()}>
                         {isPlaying ? (
-                            <Ionicons name='ios-pause' size={48} color='#444' />
+                            <Entypo name="controller-paus" size={30} color="#444" />
                         ) : (
-                                <Ionicons name='ios-play-circle' size={48} color='#444' />
+                                <Entypo name="controller-play" size={30} color="#444" />
                             )}
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.controll} onPress={() => handleNextTrack()}>
-                        <Ionicons name='ios-skip-forward' size={48} color='#444' />
+                        <Entypo name="controller-next" size={30} color="#444" />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.controllStop}>
-                        <Entypo name="controller-stop" size={52} color="#444" onPress={() => stopOption()} />
+                        <Entypo name="controller-stop" size={30} color="#444" onPress={() => stopOption()} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -188,79 +213,3 @@ export default function Player({ route, navigation }) {
         </View>
     )
 }
-
-const styles = StyleSheet.create({
-    containerPlayer: {
-        flex: 1,
-        backgroundColor: '#7bb062',
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
-    headerTitle: {
-        flex: 0.3,
-        alignSelf: 'flex-start'
-    },
-    imgControll: {
-        flex: 2,
-        justifyContent: "center",
-        alignItems: 'center'
-    },
-    trackImg: {
-        flex: 1,
-        width: 250,
-        maxHeight: 250,
-        borderWidth: 1,
-        borderColor: 'white'
-    },
-    controls: {
-        flexDirection: 'row',
-        marginTop: 10
-    },
-    controll: {
-        margin: 20
-    },
-    controllStop: {
-        marginHorizontal: 10,
-        marginTop: 17
-    },
-    trackInfo: {
-        padding: 10
-    },
-    trackInfoText: {
-        textAlign: 'center',
-        flexWrap: 'wrap',
-        color: '#fff'
-    },
-    largeText: {
-        fontSize: 22
-    },
-    smallText: {
-        fontSize: 16
-    },
-    smallText: {
-        fontSize: 14
-    },
-    control: {
-        margin: 20
-    },
-    controls: {
-        flexDirection: 'row'
-    },
-    containerDescription: {
-        flex: 1,
-        backgroundColor: 'gray',
-        borderWidth: 1,
-        borderColor: 'white',
-        borderRadius: 10,
-        marginHorizontal: 10,
-        marginBottom: 10,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-    }
-})

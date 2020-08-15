@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, Alert, ScrollView, View, Image, ActivityIndicator, Text, FlatList } from "react-native"
+import { SafeAreaView, Alert, ScrollView, View, Image, ActivityIndicator, Text } from "react-native"
 import apiData from '../api/apiData'
 import styles from '../styles/styles'
 import Card from '../Components/Card'
@@ -9,7 +9,6 @@ export default function List({ navigation }) {
     const [dt, setDt] = useState([])
     const [playlist, setPlaylist] = useState([])
     const [visible, setVisible] = useState(false)
-    const [filteredData, setFilteredData] = useState([])
 
     const getData = () => {
         apiData()
@@ -36,14 +35,14 @@ export default function List({ navigation }) {
 
     const List = () => {
         return (
-            dt.map(data => {
+            dt.map( data => {
                 return (
                     <Card
                         key={data.id}
                         title={data.title}
                         thumb={data.thumb_image_url}
                         tagline={data.tagline}
-                        onPress={() => { navigation.navigate('player', { data: data, playlist: playlist, dt: dt}) }}
+                        onPress={() => { navigation.navigate('player', { data: data, playlist: playlist, dt: dt }) }}
                     />
                 )
             })
