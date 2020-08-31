@@ -7,13 +7,13 @@ import { Audio } from 'expo-av'
 import { Entypo } from '@expo/vector-icons';
 
 export default function Player({ route, navigation }) {
-    const { data, playlist, dt } = route.params
+    const { book, playlist, dt } = route.params
 
     const [isPlaying, setIsPlaying] = useState(false)
     const [volume, setVolume] = useState(1)
     const [isBuffering, setIsBuffering] = useState(false)
     const [playbackInstance, setPlaybackInstance] = useState(null)
-    const [playerData, setPlayerData] = useState(data)
+    const [playerData, setPlayerData] = useState(book)
     const [index, setIndex] = useState(playerData.id)
     const [duration, setDuration] = useState('')
     const [current, setCurrent] = useState(0)

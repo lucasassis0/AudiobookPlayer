@@ -22,6 +22,12 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         paddingBottom: 20
     },
+    input: {
+        borderWidth: 1,
+        borderColor: 'white',
+        backgroundColor: '#d6d6d6',
+        marginBottom: 10
+    },
     containerScroll: {
         flex: 3,
         marginBottom: 30,
